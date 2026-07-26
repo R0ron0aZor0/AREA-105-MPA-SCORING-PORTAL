@@ -1655,14 +1655,20 @@ async function backupDataToGoogleSheets() {
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfD9JlTmt62ptXyW7xBJRd8o5JuCfgu7CGVnQeCXtY0geceOcnurh1IpMytZn5KdDO/exec";
 
     try {
-      let portalData = {};
-      try {
-        portalData = {
-          allData: localStorage.getItem("mpa_portal_data") ? JSON.parse(localStorage.getItem("mpa_portal_data")) : localStorage.getItem("scoringData") || "Full Portal State"
-        };
-      } catch (e) {
-        portalData = { data: "Saved State" };
+      // Kunin ang LAHAT ng laman ng localStorage ng portal na ito
+      let allLocalStorageData = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        let key = localStorage.key(i);
+        try {
+          allLocalStorageData[key] = JSON.parse(localStorage.getItem(key));
+        } catch (e) {
+          allLocalStorageData[key] = localStorage.getItem(key);
+        }
       }
+
+      let portalData = {
+        data: allLocalStorageData
+      };
 
       const response = await fetch(WEB_APP_URL, {
         method: "POST",
