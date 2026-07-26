@@ -79,7 +79,12 @@
           <i class="fa-solid fa-gear text-amber-400"></i>
           <span class="hidden sm:inline">Settings & Sheets Sync</span>
         </button>
-
+<button onclick="backupDataToGoogleSheets(portalData)" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition shadow">
+  Backup Sheets
+</button>
+<button onclick="restoreDataFromGoogleSheets()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition shadow">
+  Restore Sheets
+</button>
         <button id="logoutBtn" onclick="logout()" class="hidden bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition flex items-center gap-1 shadow">
           <i class="fa-solid fa-right-from-bracket"></i>
           <span class="hidden sm:inline">Logout</span>
@@ -1646,6 +1651,45 @@ function doPost(e) {
         }
       }, 60000);
     };
+  async function backupDataToGoogleSheets(portalData) {
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWSiPZItYNqjnXBCVXa3MC46Aj3edZRx4xviUL_3pv3M3fK3KVE3NYXwYIu_bzX8fk/exec";
+
+    try {
+      const response = await fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors", 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(portalData)
+      });
+      
+      console.log("Na-save na po ang data sa Google Sheets!");
+      alert("Backup successful!");
+    } catch (error) {
+      console.error("May error sa pag-backup:", error);
+      alert("Backup failed.");
+    }
+  }
+    async function restoreDataFromGoogleSheets() {
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWSiPZItYNqjnXBCVXa3MC46Aj3edZRx4xviUL_3pv3M3fK3KVE3NYXwYIu_bzX8fk/exec";
+
+  try {
+    const response = await fetch(WEB_APP_URL);
+    const result = await response.json();
+    
+    if (result.status === "empty") {
+      alert("Wala pang laman ang backup sheet.");
+      return;
+    }
+
+    console.log("Nakuha na ang data:", result);
+    return result;
+  } catch (error) {
+    console.error("May error sa pag-restore:", error);
+    alert("Restore failed.");
+  }
+}
   </script>
 </body>
 </html>
