@@ -1652,71 +1652,63 @@ function doPost(e) {
       }, 60000);
     };
 async function backupDataToGoogleSheets() {
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfD9JlTmt62ptXyW7xBJRd8o5JuCfgu7CGVnQeCXtY0geceOcnurh1IpMytZn5KdDO/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfD9JlTmt62ptXyW7xBJRd8o5JuCfgu7CGVnQeCXtY0geceOcnurh1IpMytZn5KdDO/exec";
+    
+    // Kunin ang tamang local storage key (halimbawa: area105_daily_scores_v4)
+    const rawData = localStorage.getItem("area105_daily_scores_v4");
+    
+    if (!rawData) {
+        alert("Walang makitang data sa LocalStorage para i-backup!");
+        return;
+    }
 
-    try {
-      // Kunin ang LAHAT ng laman ng localStorage ng portal na ito
-      let allLocalStorageData = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        let key = localStorage.key(i);
-        try {
-          allLocalStorageData[key] = JSON.parse(localStorage.getItem(key));
-        } catch (e) {
-          allLocalStorageData[key] = localStorage.getItem(key);
-        }
-      }
+    const parsedLocal = JSON.parse(rawData);
 
-      let portalData = {
-        data: allLocalStorageData
-      };
+    const payload = {
+        category: "Full Portal Backup",
+        payload: parsedLocal
+    };
 
-      const response = await fetch(WEB_APP_URL, {
-        method: "POST",
-        redirect: "follow",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8",
-        },
-        body: JSON.stringify({ category: "Full Portal Backup", payload: portalData })
-      });
-      
-      const result = await response.json();
-      if (result.status === "success") {
-        console.log("Na-save na po ang data sa Google Sheets!");
-        alert("Backup successful!");
-      } else {
-        alert("Backup failed.");
-      }
-    } catch (error) {
-      console.error("May error sa pag-backup:", error);
-      alert("Backup failed.");
-    }
-  }
+    try {
+        const response = await fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify(payload)
+        });
 
+        alert("Tagumpay na na-backup ang data sa Google Sheets!");
+    } catch (error) {
+        console.error("Backup Error:", error);
+        alert("Nabigong i-save ang data.");
+    }
+}
   async function restoreDataFromGoogleSheets() {
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfD9JlTmt62ptXyW7xBJRd8o5JuCfgu7CGVnQeCXtY0geceOcnurh1IpMytZn5KdDO/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfD9JlTmt62ptXyW7xBJRd8o5JuCfgu7CGVnQeCXtY0geceOcnurh1IpMytZn5KdDO/exec";
 
-    try {
-      const response = await fetch(WEB_APP_URL, {
-        method: "GET",
-        redirect: "follow"
-      });
-      const result = await response.json();
-      
-      const actualData = result.data || result;
+    try {
+        const response = await fetch(WEB_APP_URL);
+        const result = await response.json();
 
-      if (result.status === "error") {
-        alert("Restore failed.");
-        return;
-      }
-
-      console.log("Nakuha na ang data:", actualData);
-      alert("Restore successful!");
-      return actualData;
-    } catch (error) {
-      console.error("May error sa pag-restore:", error);
-      alert("Restore failed.");
-    }
-  }
+        if (result.status === "success" && result.data) {
+            // Suriin kung may laman ang nakuha bago i-save sa localStorage
+            if (Object.keys(result.data).length > 0) {
+                localStorage.setItem("area105_daily_scores_v4", JSON.stringify(result.data));
+                alert("Na-restore na ang data mula sa Google Sheets! I-refresh ang pahina.");
+                location.reload(); // I-reload para lumabas ang mga datos sa table
+            } else {
+                alert("Walang laman o invalid ang nakuha mula sa Backup_Logs.");
+            }
+        } else {
+            alert("Hindi ma-restore ang data.");
+        }
+    } catch (error) {
+        console.error("Restore Error:", error);
+        alert("May error sa pagkonekta sa Google Sheets.");
+    }
+}
   </script>
 </body>
 </html>
