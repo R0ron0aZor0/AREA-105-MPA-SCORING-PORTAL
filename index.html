@@ -863,7 +863,7 @@ function doPost(e) {
         updateSyncIndicator('offline', 'Sheets Sync Failed (Local Active)');
       }
     }
-    <button onclick="restoreFromGoogleSheet()" class="btn-restore">Restore Cloud Backup</button>
+
     async function pushToGoogleSheets() {
       if (!googleSheetsUrl) return;
 
@@ -894,50 +894,11 @@ function doPost(e) {
     function showAppsScriptCodeModal() {
       document.getElementById('appsScriptModal').classList.remove('hidden');
     }
+
     function closeAppsScriptCodeModal() {
       document.getElementById('appsScriptModal').classList.add('hidden');
     }
-function closeAppsScriptCodeModal() {
-    document.getElementById('appScriptModal').classList.add('hidden');
-}
 
-// DITO MO ISISNGIT SA LINE 900:
-async function restoreFromGoogleSheet() {
-  if (!googleSheetsUrl) {
-    alert("Walang nakaset na Google Sheets URL!");
-    return;
-  }
-  
-  try {
-    updatesyncIndicator('syncing', 'Restoring from Cloud...');
-    const response = await fetch(googleSheetsUrl);
-    const cloudData = await response.json();
-    
-    if (cloudData && typeof cloudData === 'object') {
-      scoresData = cloudData;
-      localStorage.setItem('area105_daily_scores_v4', JSON.stringify(scoresData));
-      
-      if (currentUser && currentUser.role === 'branch') {
-        loadBranchPortalData();
-      } else if (currentUser && currentUser.role === 'admin') {
-        renderMasterTable();
-      }
-      
-      updatesyncIndicator('online', 'Restore Successful');
-      alert("Tagumpay na na-restore ang data mula sa Google Sheet!");
-    } else {
-      alert("Walang wastong data na nahanap sa Google Sheet.");
-    }
-  } catch (error) {
-    console.error("Restore Error:", error);
-    updatesyncIndicator('offline', 'Restore Failed');
-    alert("Nabigo ang pag-restore ng data.");
-  }
-}
-
-function copyAppsScriptCode() {
-    const text = document.getElementById('appScriptCodeText').innerText;
-...
     function copyAppsScriptCode() {
       const text = document.getElementById('appsScriptCodeText').innerText;
       navigator.clipboard.writeText(text).then(() => {
