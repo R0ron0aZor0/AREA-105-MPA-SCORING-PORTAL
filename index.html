@@ -1651,45 +1651,57 @@ function doPost(e) {
         }
       }, 60000);
     };
-  async function backupDataToGoogleSheets(portalData) {
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWSiPZItYNqjnXBCVXa3MC46Aj3edZRx4xviUL_3pv3M3fK3KVE3NYXwYIu_bzX8fk/exec";
+async function backupDataToGoogleSheets(portalData) {
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfD9JlTmt62ptXyW7xBJRd8o5JuCfgu7CGVnQeCXtY0geceOcnurh1IpMytZn5KdDO/exec";
 
     try {
       const response = await fetch(WEB_APP_URL, {
         method: "POST",
-        mode: "no-cors", 
+        redirect: "follow",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "text/plain;charset=utf-8",
         },
-        body: JSON.stringify(portalData)
+        body: JSON.stringify({ category: "Full Portal Backup", payload: portalData })
       });
       
-      console.log("Na-save na po ang data sa Google Sheets!");
-      alert("Backup successful!");
+      const result = await response.json();
+      if (result.status === "success") {
+        console.log("Na-save na po ang data sa Google Sheets!");
+        alert("Backup successful!");
+      } else {
+        alert("Backup failed.");
+      }
     } catch (error) {
       console.error("May error sa pag-backup:", error);
       alert("Backup failed.");
     }
   }
-    async function restoreDataFromGoogleSheets() {
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWSiPZItYNqjnXBCVXa3MC46Aj3edZRx4xviUL_3pv3M3fK3KVE3NYXwYIu_bzX8fk/exec";
 
-  try {
-    const response = await fetch(WEB_APP_URL);
-    const result = await response.json();
-    
-    if (result.status === "empty") {
-      alert("Wala pang laman ang backup sheet.");
-      return;
+  async function restoreDataFromGoogleSheets() {
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfD9JlTmt62ptXyW7xBJRd8o5JuCfgu7CGVnQeCXtY0geceOcnurh1IpMytZn5KdDO/exec";
+
+    try {
+      const response = await fetch(WEB_APP_URL, {
+        method: "GET",
+        redirect: "follow"
+      });
+      const result = await response.json();
+      
+      const actualData = result.data || result;
+
+      if (result.status === "error") {
+        alert("Restore failed.");
+        return;
+      }
+
+      console.log("Nakuha na ang data:", actualData);
+      alert("Restore successful!");
+      return actualData;
+    } catch (error) {
+      console.error("May error sa pag-restore:", error);
+      alert("Restore failed.");
     }
-
-    console.log("Nakuha na ang data:", result);
-    return result;
-  } catch (error) {
-    console.error("May error sa pag-restore:", error);
-    alert("Restore failed.");
   }
-}
   </script>
 </body>
 </html>
