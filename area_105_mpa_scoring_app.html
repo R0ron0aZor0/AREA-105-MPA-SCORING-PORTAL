@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AREA 105 MPA Daily & Summary Scoring Portal</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cebuana: {
+              navy: '#0b2545',
+              blue: '#134074',
+              gold: '#d4af37',
+              accent: '#0077b6',
+              light: '#f4f6f9'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .table-scrollbar::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .table-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .table-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .table-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="bg-cebuana-navy text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-amber-500 text-cebuana-navy p-2 rounded-lg font-black text-xl flex items-center justify-center h-10 w-10 shadow">
+          105
+        </div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight tracking-wide">AREA 105 MPA SCORING PORTAL</h1>
+          <p class="text-[11px] text-slate-300">Daily Entry & Multi-Product Penetration Metrics</p>
+        </div>
+      </div>
+
+      <!-- SESSION CONTROLS -->
+      <div id="headerControls" class="flex items-center space-x-3">
+        <!-- Google Sheets Sync Indicator -->
+        <div id="syncIndicator" class="hidden sm:flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800/90 border border-slate-700 text-slate-300">
+          <span class="inline-block w-2 h-2 rounded-full bg-slate-400 me-1.5" id="syncDot"></span>
+          <span id="syncText">Offline Mode</span>
+        </div>
+
+        <div id="userBadge" class="hidden flex items-center bg-slate-800/90 px-3 py-1.5 rounded-full border border-slate-700 text-xs text-slate-200">
+          <i id="userIcon" class="fa-solid me-2 text-amber-400"></i>
+          <span id="userNameDisplay" class="font-semibold">Guest</span>
+        </div>
+
+        <button id="adminSettingsBtn" onclick="openAdminModal()" class="hidden bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-gear text-amber-400"></i>
+          <span class="hidden sm:inline">Settings & Sheets Sync</span>
+        </button>
+
+        <button id="logoutBtn" onclick="logout()" class="hidden bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition flex items-center gap-1 shadow">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span class="hidden sm:inline">Logout</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginSection" class="max-w-md mx-auto my-10 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
+      <div class="bg-cebuana-navy p-6 text-center text-white relative">
+        <div class="w-14 h-14 bg-amber-500/10 border-2 border-amber-500 rounded-full flex items-center justify-center mx-auto mb-3 text-amber-400 text-2xl">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h2 class="text-xl font-bold">AREA 105 MPA Authentication</h2>
+        <p class="text-xs text-slate-300 mt-1">Select Branch Portal or Administrator Access</p>
+      </div>
+
+      <div class="flex border-b border-slate-200 bg-slate-50 text-sm font-semibold">
+        <button id="branchLoginTab" onclick="switchLoginMode('branch')" class="flex-1 py-3 text-center text-cebuana-blue border-b-2 border-cebuana-blue bg-white">
+          <i class="fa-solid fa-store me-1"></i> Branch Portal
+        </button>
+        <button id="adminLoginTab" onclick="switchLoginMode('admin')" class="flex-1 py-3 text-center text-slate-500 hover:text-slate-700">
+          <i class="fa-solid fa-user-shield me-1"></i> Admin Tab
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- Branch Login Form -->
+        <form id="branchLoginForm" onsubmit="handleBranchLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Select Branch (45 Branches)</label>
+            <select id="branchSelect" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-cebuana-blue focus:outline-none" required>
+              <option value="">-- Choose Branch --</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Branch Access PIN</label>
+            <div class="relative">
+              <input type="password" id="branchPinInput" placeholder="Enter Branch PIN" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-cebuana-blue focus:outline-none" required>
+              <button type="button" onclick="togglePassword('branchPinInput')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">Default PIN is the Branch Code (e.g., 10510)</p>
+          </div>
+          <button type="submit" class="w-full bg-cebuana-blue hover:bg-cebuana-navy text-white font-semibold py-2.5 rounded-lg text-sm shadow transition duration-150 flex items-center justify-center gap-2">
+            <span>Login to Daily Branch Portal</span>
+          </button>
+        </form>
+
+        <!-- Admin Login Form -->
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-4 hidden">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Admin Email</label>
+            <input type="email" id="adminEmailInput" placeholder="admin@area105.com" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Admin Access Key</label>
+            <div class="relative">
+              <input type="password" id="adminPassInput" placeholder="Enter Admin Key" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none" required>
+              <button type="button" onclick="togglePassword('adminPassInput')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">Default Admin Key: <span class="font-mono bg-slate-100 px-1 rounded">ADMIN105</span></p>
+          </div>
+          <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-lg text-sm shadow transition duration-150">
+            Login to Admin Summary Tab
+          </button>
+        </form>
+
+        <div id="loginError" class="mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg hidden flex items-center gap-2">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="loginErrorMsg">Invalid credentials</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD SECTION -->
+    <div id="dashboardSection" class="hidden space-y-6">
+
+      <!-- TOP METRIC CARDS SUMMARY -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1 -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p id="statCard1Label" class="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Total Clients (All Products)</p>
+            <h3 id="statTotalClients" class="text-2xl font-black text-slate-800 mt-1">0</h3>
+            <p id="statCard1Sub" class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-users text-cebuana-blue me-1"></i>P1 to P10 total clients</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-50 text-cebuana-blue rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-users"></i>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p id="statCard2Label" class="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Clients w/ 4+ Products</p>
+            <h3 id="statClients4Plus" class="text-2xl font-black text-amber-600 mt-1">0</h3>
+            <p id="statCard2Sub" class="text-[11px] text-emerald-600 mt-0.5"><i class="fa-solid fa-check-double me-1"></i>Only P4 to P10 counted</p>
+          </div>
+          <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p id="statCard3Label" class="text-[11px] font-bold uppercase text-slate-500 tracking-wider">4+ Products MPA Volume</p>
+            <h3 id="statTotalProducts" class="text-2xl font-black text-indigo-700 mt-1">0</h3>
+            <p id="statCard3Sub" class="text-[11px] text-indigo-600 mt-0.5"><i class="fa-solid fa-award me-1"></i>P4x4 + P5x5 + ... + P10x10</p>
+          </div>
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-cubes"></i>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p id="statCard4Label" class="text-[11px] font-bold uppercase text-slate-500 tracking-wider">AREA MPA Ratio</p>
+            <h3 id="statAreaMpa" class="text-2xl font-black text-emerald-600 mt-1">0.00</h3>
+            <p id="statCard4Sub" class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-chart-pie me-1"></i>4+ Prod Vol / Total Clients</p>
+          </div>
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-arrow-trend-up"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- BRANCH PORTAL VIEW (DAILY ENCODER FOR SINGLE LOGGED-IN BRANCH) -->
+      <div id="branchPortalView" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-md p-6 space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+            <div>
+              <span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-mono text-xs rounded-md font-extrabold me-2" id="bvBranchCode">CODE</span>
+              <h2 class="text-2xl font-black text-slate-900 inline" id="bvBranchName">Branch Name</h2>
+              <p class="text-xs text-slate-500 mt-1">Encode daily client counts. <span class="font-bold text-amber-700">Products 4 to 10 are weighted by product number (P4=4x, P5=5x, ..., P10=10x).</span></p>
+            </div>
+
+            <!-- Unified Interactive Date Picker for Branch -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div>
+                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Select Date (Month, Day & Year)</label>
+                <div class="relative flex items-center gap-2 bg-slate-100 border border-slate-300 p-1.5 rounded-xl shadow-sm">
+                  <i class="fa-solid fa-calendar-day text-cebuana-blue px-2"></i>
+                  <input type="date" id="branchDatePicker" onchange="onBranchDatePickerChange(this.value)" class="bg-white font-bold text-xs px-3 py-1.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cebuana-blue focus:outline-none cursor-pointer text-slate-800 shadow-inner">
+                </div>
+              </div>
+
+              <div class="pt-4">
+                <button onclick="saveBranchDailyScore()" id="saveBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg text-xs shadow flex items-center gap-2 transition">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  <span id="saveBtnText">Save & Sync Tally</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- MONTHLY CUMULATIVE PRODUCT TALLY BAR -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h4 class="text-xs font-bold uppercase text-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-cebuana-blue"></i>
+                <span id="monthlyBreakdownHeader" class="text-cebuana-blue">JULY 2026</span> CUMULATIVE MONTHLY PRODUCT TALLIES (P1 - P10)
+              </h4>
+              <button type="button" onclick="toggleMonthlyTallies()" id="toggleMonthlyTalliesBtn" class="text-xs font-bold text-cebuana-blue bg-white border border-slate-300 hover:bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition">
+                <i class="fa-solid fa-eye" id="toggleMonthlyIcon"></i>
+                <span id="toggleMonthlyText">Show Monthly Tallies</span>
+              </button>
+            </div>
+            <div id="monthlyProductTallyGridContainer" class="hidden pt-2 border-t border-slate-200 mt-2">
+              <div id="monthlyProductTallyGrid" class="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2 font-mono text-center">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Daily Product Input Grid -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-cebuana-blue"></i> Daily Client Entry for <span id="branchActiveDateDisplay" class="text-cebuana-blue font-extrabold">JULY 26, 2026</span>
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2.5">
+              <!-- Products 1 to 3 -->
+              <div class="bg-slate-100 p-3 rounded-xl border border-slate-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-slate-500">PROD 1</span>
+                  <span class="text-[9px] bg-slate-200 text-slate-600 px-1 rounded">Base</span>
+                </div>
+                <input type="number" min="0" id="bInput_1" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-slate-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-cebuana-blue focus:outline-none" value="0">
+              </div>
+
+              <div class="bg-slate-100 p-3 rounded-xl border border-slate-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-slate-500">PROD 2</span>
+                  <span class="text-[9px] bg-slate-200 text-slate-600 px-1 rounded">Base</span>
+                </div>
+                <input type="number" min="0" id="bInput_2" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-slate-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-cebuana-blue focus:outline-none" value="0">
+              </div>
+
+              <div class="bg-slate-100 p-3 rounded-xl border border-slate-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-slate-500">PROD 3</span>
+                  <span class="text-[9px] bg-slate-200 text-slate-600 px-1 rounded">Base</span>
+                </div>
+                <input type="number" min="0" id="bInput_3" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-slate-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-cebuana-blue focus:outline-none" value="0">
+              </div>
+
+              <!-- Products 4 to 10 -->
+              <div class="bg-amber-50 p-3 rounded-xl border border-amber-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-amber-800">PROD 4</span>
+                  <span class="text-[9px] bg-amber-200 text-amber-900 px-1 rounded font-bold">4x Vol</span>
+                </div>
+                <input type="number" min="0" id="bInput_4" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-amber-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-amber-500 focus:outline-none" value="0">
+              </div>
+
+              <div class="bg-amber-50 p-3 rounded-xl border border-amber-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-amber-800">PROD 5</span>
+                  <span class="text-[9px] bg-amber-200 text-amber-900 px-1 rounded font-bold">5x Vol</span>
+                </div>
+                <input type="number" min="0" id="bInput_5" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-amber-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-amber-500 focus:outline-none" value="0">
+              </div>
+
+              <div class="bg-amber-50 p-3 rounded-xl border border-amber-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-amber-800">PROD 6</span>
+                  <span class="text-[9px] bg-amber-200 text-amber-900 px-1 rounded font-bold">6x Vol</span>
+                </div>
+                <input type="number" min="0" id="bInput_6" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-amber-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-amber-500 focus:outline-none" value="0">
+              </div>
+
+              <div class="bg-amber-50 p-3 rounded-xl border border-amber-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-amber-800">PROD 7</span>
+                  <span class="text-[9px] bg-amber-200 text-amber-900 px-1 rounded font-bold">7x Vol</span>
+                </div>
+                <input type="number" min="0" id="bInput_7" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-amber-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-amber-500 focus:outline-none" value="0">
+              </div>
+
+              <div class="bg-amber-50 p-3 rounded-xl border border-amber-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-amber-800">PROD 8</span>
+                  <span class="text-[9px] bg-amber-200 text-amber-900 px-1 rounded font-bold">8x Vol</span>
+                </div>
+                <input type="number" min="0" id="bInput_8" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-amber-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-amber-500 focus:outline-none" value="0">
+              </div>
+
+              <div class="bg-amber-50 p-3 rounded-xl border border-amber-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-amber-800">PROD 9</span>
+                  <span class="text-[9px] bg-amber-200 text-amber-900 px-1 rounded font-bold">9x Vol</span>
+                </div>
+                <input type="number" min="0" id="bInput_9" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-amber-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-amber-500 focus:outline-none" value="0">
+              </div>
+
+              <div class="bg-amber-50 p-3 rounded-xl border border-amber-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold text-amber-800">PROD 10</span>
+                  <span class="text-[9px] bg-amber-200 text-amber-900 px-1 rounded font-bold">10x Vol</span>
+                </div>
+                <input type="number" min="0" id="bInput_10" onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="calcBranchPreview()" class="w-full bg-white px-2 py-1.5 border border-amber-300 rounded-md text-sm font-bold text-center focus:ring-2 focus:ring-amber-500 focus:outline-none" value="0">
+              </div>
+            </div>
+          </div>
+
+          <!-- Daily Live Summary Preview -->
+          <div class="bg-slate-900 text-white p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 font-mono">
+            <div class="flex items-center gap-4 text-xs">
+              <div>
+                <span class="text-slate-400 block text-[10px]">SELECTED DAY CLIENTS</span>
+                <span id="bvTotalClients" class="text-lg font-bold text-white">0</span>
+              </div>
+              <div class="h-8 w-px bg-slate-700"></div>
+              <div>
+                <span class="text-slate-400 block text-[10px]">SELECTED DAY 4+ CLIENTS</span>
+                <span id="bv4Plus" class="text-lg font-bold text-amber-400">0</span>
+              </div>
+              <div class="h-8 w-px bg-slate-700"></div>
+              <div>
+                <span class="text-slate-400 block text-[10px]">SELECTED DAY 4+ PROD VOL</span>
+                <span id="bvTotalProducts" class="text-lg font-bold text-indigo-400">0</span>
+              </div>
+            </div>
+
+            <div class="bg-amber-500/20 border border-amber-500/30 px-4 py-2 rounded-lg text-right">
+              <span class="text-[10px] text-amber-300 block font-sans font-bold uppercase tracking-wider">Day MPA Ratio</span>
+              <span id="bvMpa" class="text-xl font-black text-amber-400">0.00</span>
+            </div>
+          </div>
+
+          <!-- MOBILE FLOATING QUICK-SAVE BAR -->
+          <div class="md:hidden fixed bottom-4 left-4 right-4 bg-cebuana-navy text-white p-3 rounded-2xl shadow-2xl z-30 flex items-center justify-between border border-amber-500/30">
+            <div>
+              <p class="text-[10px] text-slate-300 uppercase font-bold">Quick Sync (Mobile)</p>
+              <p class="text-xs font-mono font-bold text-amber-400"><span id="mobileSummaryClients">0</span> Clients | MPA: <span id="mobileSummaryMpa">0.00</span></p>
+            </div>
+            <button onclick="saveBranchDailyScore()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg transition">
+              <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+              <span>Save & Sync</span>
+            </button>
+          </div>
+
+          <!-- Monthly Log History Table for logged in branch -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-cebuana-blue"></i>
+                <span id="branchMonthLogHeader" class="text-cebuana-blue font-extrabold">JULY 2026</span> Daily Tally Breakdown for <span id="branchMonthLogName" class="font-extrabold">Branch</span>
+              </h3>
+              <span class="text-[11px] text-slate-500">Click any day row to edit score</span>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200 rounded-xl table-scrollbar">
+              <table class="w-full text-xs text-left">
+                <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
+                  <tr>
+                    <th class="p-2">Day</th>
+                    <th class="p-1.5 text-center">P1</th>
+                    <th class="p-1.5 text-center">P2</th>
+                    <th class="p-1.5 text-center">P3</th>
+                    <th class="p-1.5 text-center bg-amber-50 text-amber-900">P4</th>
+                    <th class="p-1.5 text-center bg-amber-50 text-amber-900">P5</th>
+                    <th class="p-1.5 text-center bg-amber-50 text-amber-900">P6</th>
+                    <th class="p-1.5 text-center bg-amber-50 text-amber-900">P7</th>
+                    <th class="p-1.5 text-center bg-amber-50 text-amber-900">P8</th>
+                    <th class="p-1.5 text-center bg-amber-50 text-amber-900">P9</th>
+                    <th class="p-1.5 text-center bg-amber-50 text-amber-900">P10</th>
+                    <th class="p-2 text-center bg-blue-50">Total Clients</th>
+                    <th class="p-2 text-center bg-amber-50">Clients 4+</th>
+                    <th class="p-2 text-center bg-indigo-50">4+ Score</th>
+                    <th class="p-2 text-center bg-emerald-50">MPA Ratio</th>
+                  </tr>
+                </thead>
+                <tbody id="branchDailyHistoryBody" class="divide-y divide-slate-200 font-mono">
+                  <!-- Dynamically populated per exact number of days in selected month -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN CONSOLIDATED VIEW -->
+      <div id="adminPortalView" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-md p-6 space-y-4">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+            <div>
+              <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-mono text-xs rounded-md font-extrabold me-2">ADMIN MASTER</span>
+              <h2 class="text-2xl font-black text-slate-900 inline">Area 105 Master Summary Tally</h2>
+              <p class="text-xs text-slate-500 mt-1">Consolidated Multi-Product Penetration performance across all 45 branches.</p>
+            </div>
+
+            <!-- Admin Filters & Controls -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="fetchFromGoogleSheets()" class="bg-cebuana-blue hover:bg-cebuana-navy text-white font-bold px-3 py-2 rounded-lg text-xs shadow flex items-center gap-1.5">
+                <i class="fa-solid fa-arrows-rotate"></i> Sync Cloud Data
+              </button>
+
+              <div class="bg-slate-100 p-1 rounded-xl border border-slate-200 flex text-xs font-semibold">
+                <button id="adminTabToday" onclick="switchAdminTab('today')" class="px-3 py-1.5 rounded-lg bg-white shadow text-cebuana-blue font-bold">
+                  Daily
+                </button>
+                <button id="adminTabMonthly" onclick="switchAdminTab('monthly')" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">
+                  Monthly Tally
+                </button>
+                <button id="adminTabYearly" onclick="switchAdminTab('yearly')" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">
+                  Yearly YTD
+                </button>
+              </div>
+
+              <div id="adminDateSelectorContainer" class="flex items-center gap-2 text-xs">
+                <!-- Dynamically populated via JS -->
+              </div>
+
+              <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-lg text-xs shadow flex items-center gap-1.5">
+                <i class="fa-solid fa-file-csv"></i> Export CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Filter Badge -->
+          <div class="flex items-center justify-between bg-amber-50 border border-amber-200 p-3 rounded-xl">
+            <div class="flex items-center space-x-2 text-amber-900 text-xs font-semibold">
+              <i class="fa-solid fa-calendar-days text-amber-600"></i>
+              <span>Active Consolidation Period:</span>
+              <span id="adminPeriodBadge" class="bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-mono font-bold">TODAY</span>
+            </div>
+            <div class="w-48 sm:w-64">
+              <input type="text" id="tableSearch" onkeyup="filterTable()" placeholder="Search branch code or name..." class="w-full px-3 py-1 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-cebuana-blue focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Master Scoring Table -->
+          <div class="overflow-x-auto border border-slate-200 rounded-xl table-scrollbar">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-cebuana-navy text-white font-bold uppercase">
+                <tr>
+                  <th class="p-3">Code</th>
+                  <th class="p-3">Branch Name</th>
+                  <th class="p-2 text-center text-slate-300">P1</th>
+                  <th class="p-2 text-center text-slate-300">P2</th>
+                  <th class="p-2 text-center text-slate-300">P3</th>
+                  <th class="p-2 text-center bg-amber-600">P4</th>
+                  <th class="p-2 text-center bg-amber-600">P5</th>
+                  <th class="p-2 text-center bg-amber-600">P6</th>
+                  <th class="p-2 text-center bg-amber-600">P7</th>
+                  <th class="p-2 text-center bg-amber-600">P8</th>
+                  <th class="p-2 text-center bg-amber-600">P9</th>
+                  <th class="p-2 text-center bg-amber-600">P10</th>
+                  <th class="p-3 text-center bg-blue-900">Total Clients</th>
+                  <th class="p-3 text-center bg-amber-700">Clients 4+</th>
+                  <th class="p-3 text-center bg-indigo-900">4+ Volume</th>
+                  <th class="p-3 text-center bg-emerald-700">MPA Ratio</th>
+                  <th class="p-3 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="scoringTableBody" class="divide-y divide-slate-200 font-mono">
+                <!-- Dynamically populated -->
+              </tbody>
+              <tfoot class="bg-slate-100 font-mono border-t-2 border-slate-300" id="tableFootRow">
+                <!-- Dynamically calculated -->
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ADMIN SETTINGS & GOOGLE SHEETS SETUP MODAL -->
+  <div id="adminModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full overflow-hidden">
+      <div class="bg-cebuana-navy p-4 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-amber-400"></i> Settings & Google Sheets Database
+        </h3>
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+        <!-- Google Sheets Integration Setup -->
+        <div class="bg-emerald-50/80 p-4 rounded-xl border border-emerald-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-extrabold uppercase text-emerald-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i> Google Sheets Database Sync
+            </h4>
+            <span class="text-[10px] bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold">Recommended</span>
+          </div>
+          <p class="text-[11px] text-emerald-800 leading-relaxed">
+            Connect your app to Google Sheets so daily encoding from all 45 branches automatically saves to a central spreadsheet in real-time.
+          </p>
+          <div>
+            <label class="block text-[11px] font-bold text-emerald-900 mb-1">Google Apps Script Web App URL</label>
+            <input type="text" id="modalGoogleSheetUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+          <div class="flex gap-2">
+            <button onclick="saveGoogleSheetsUrl()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-2 rounded-lg text-xs shadow flex items-center gap-1.5">
+              <i class="fa-solid fa-link"></i> Save & Connect URL
+            </button>
+            <button onclick="showAppsScriptCodeModal()" class="bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-3 py-2 rounded-lg text-xs shadow-sm">
+              <i class="fa-solid fa-code"></i> View Apps Script Code
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin Security Credentials -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+          <h4 class="text-xs font-bold uppercase text-slate-700">Admin Credentials</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Admin Email</label>
+              <input type="email" id="modalAdminEmail" class="w-full px-2.5 py-1.5 border rounded text-xs font-mono">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Admin Key</label>
+              <input type="password" id="modalAdminPass" class="w-full px-2.5 py-1.5 border rounded text-xs font-mono">
+            </div>
+          </div>
+          <button onclick="saveAdminCredentials()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded text-xs shadow">
+            Update Admin Key
+          </button>
+        </div>
+
+        <!-- Branch PIN Management -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold uppercase text-slate-700">Branch Access PINs</h4>
+            <button onclick="resetAllPinsToDefault()" class="text-[11px] text-rose-600 hover:underline font-semibold">
+              Reset All to Branch Code
+            </button>
+          </div>
+          <div id="branchPinList" class="divide-y divide-slate-100 border rounded-xl overflow-hidden text-xs max-h-40 overflow-y-auto">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-100 p-3 text-right">
+        <button onclick="closeAdminModal()" class="bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold px-4 py-1.5 rounded-lg text-xs">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOOGLE APPS SCRIPT CODE INSTRUCTION MODAL -->
+  <div id="appsScriptModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden">
+      <div class="bg-cebuana-navy p-4 text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-code text-amber-400"></i> Google Apps Script Code Instructions
+        </h3>
+        <button onclick="closeAppsScriptCodeModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
+        <p class="text-slate-600 leading-relaxed">
+          Copy the Google Apps Script code below and paste it into your Google Spreadsheet's Script Editor to enable multi-device sync across all 45 branches.
+        </p>
+
+        <div class="relative bg-slate-900 rounded-xl p-4 text-emerald-400 font-mono text-[11px] overflow-x-auto shadow-inner border border-slate-800">
+          <button onclick="copyAppsScriptCode()" class="absolute top-2 right-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-[10px] font-sans font-bold flex items-center gap-1 border border-slate-700">
+            <i class="fa-solid fa-copy"></i> Copy Code
+          </button>
+          <pre id="appsScriptCodeText">function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var cellValue = sheet.getRange("A1").getValue();
+  var data = {};
+  if (cellValue) {
+    try {
+      data = JSON.parse(cellValue);
+    } catch(err) {
+      data = {};
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var contents = e.postData.contents;
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    sheet.getRange("A1").setValue(contents);
+    return ContentService.createTextOutput(JSON.stringify({status: "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Quick Setup Steps:</h4>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700 leading-relaxed">
+            <li>Open a new blank sheet on <a href="https://sheets.google.com" target="_blank" class="text-cebuana-blue underline font-bold">Google Sheets</a>.</li>
+            <li>In top menu, click <b>Extensions</b> &gt; <b>Apps Script</b>.</li>
+            <li>Delete all default text in <code class="bg-slate-100 px-1 font-mono">Code.gs</code> and paste the code above.</li>
+            <li>Click <b>Deploy</b> &gt; <b>New Deployment</b>.</li>
+            <li>Click the Gear Icon (<i>Select type</i>) and pick <b>Web app</b>.</li>
+            <li>Set <b>Execute as</b> to <i>"Me"</i> and <b>Who has access</b> to <i>"Anyone"</i>.</li>
+            <li>Click <b>Deploy</b>, authorize permissions, and copy the generated <b>Web App URL</b>.</li>
+            <li>Paste that Web App URL in the Settings modal of this app!</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="bg-slate-100 p-3 text-right">
+        <button onclick="closeAppsScriptCodeModal()" class="bg-cebuana-blue hover:bg-cebuana-navy text-white font-bold px-4 py-1.5 rounded-lg text-xs">
+          Close Window
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN EDIT ROW MODAL -->
+  <div id="editRowModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full overflow-hidden">
+      <div class="bg-cebuana-navy p-4 text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm" id="editRowTitle">Edit Branch Score</h3>
+        <button onclick="closeEditRowModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <input type="hidden" id="editBranchId">
+        <div class="grid grid-cols-5 gap-2.5">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">P1</label>
+            <input type="number" min="0" id="adminProdInput_1" class="w-full px-2 py-1 border rounded text-center text-xs font-bold">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">P2</label>
+            <input type="number" min="0" id="adminProdInput_2" class="w-full px-2 py-1 border rounded text-center text-xs font-bold">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">P3</label>
+            <input type="number" min="0" id="adminProdInput_3" class="w-full px-2 py-1 border rounded text-center text-xs font-bold">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-amber-700 mb-1">P4 (4+)</label>
+            <input type="number" min="0" id="adminProdInput_4" class="w-full px-2 py-1 border border-amber-300 rounded text-center text-xs font-bold bg-amber-50">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-amber-700 mb-1">P5 (4+)</label>
+            <input type="number" min="0" id="adminProdInput_5" class="w-full px-2 py-1 border border-amber-300 rounded text-center text-xs font-bold bg-amber-50">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-amber-700 mb-1">P6 (4+)</label>
+            <input type="number" min="0" id="adminProdInput_6" class="w-full px-2 py-1 border border-amber-300 rounded text-center text-xs font-bold bg-amber-50">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-amber-700 mb-1">P7 (4+)</label>
+            <input type="number" min="0" id="adminProdInput_7" class="w-full px-2 py-1 border border-amber-300 rounded text-center text-xs font-bold bg-amber-50">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-amber-700 mb-1">P8 (4+)</label>
+            <input type="number" min="0" id="adminProdInput_8" class="w-full px-2 py-1 border border-amber-300 rounded text-center text-xs font-bold bg-amber-50">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-amber-700 mb-1">P9 (4+)</label>
+            <input type="number" min="0" id="adminProdInput_9" class="w-full px-2 py-1 border border-amber-300 rounded text-center text-xs font-bold bg-amber-50">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-amber-700 mb-1">P10 (4+)</label>
+            <input type="number" min="0" id="adminProdInput_10" class="w-full px-2 py-1 border border-amber-300 rounded text-center text-xs font-bold bg-amber-50">
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-100 p-3 flex justify-end gap-2">
+        <button onclick="closeEditRowModal()" class="bg-slate-300 text-slate-700 font-bold px-3 py-1.5 rounded text-xs">Cancel</button>
+        <button onclick="saveAdminRowEdit()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded text-xs shadow">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastNotification" class="hidden fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg font-semibold text-xs transition-all duration-300 flex items-center gap-2 text-white">
+    <i id="toastIcon" class="fa-solid fa-circle-check"></i>
+    <span id="toastMsg">Notification message</span>
+  </div>
+
+  <script>
+    // System Constants & Initial Data
+    const MONTHS_LIST = [
+      "January", "February", "March", "April", "May", "June", 
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    // ALL 45 OFFICIAL AREA 105 BRANCHES
+    let DEFAULT_BRANCHES = [
+      { id: 'b10510', code: '10510', name: 'CLH RETIRO LALOMA', pin: '10510' },
+      { id: 'b10205', code: '10205', name: 'CLH GALAS', pin: '10205' },
+      { id: 'b10507', code: '10507', name: 'CLH ESPANA', pin: '10507' },
+      { id: 'b10518', code: '10518', name: 'CLH TRABAJO', pin: '10518' },
+      { id: 'b10218', code: '10218', name: 'CLH STO.TOMAS', pin: '10218' },
+      { id: 'b10511', code: '10511', name: 'CLH LAON LAAN', pin: '10511' },
+      { id: 'b10505', code: '10505', name: 'CLH N. REYES', pin: '10505' },
+      { id: 'b10204', code: '10204', name: 'CLH G. TUAZON', pin: '10204' },
+      { id: 'b10506', code: '10506', name: 'CLH DAPITAN 2', pin: '10506' },
+      { id: 'b10516', code: '10516', name: 'CLH DAPITAN 3', pin: '10516' },
+      { id: 'b10525', code: '10525', name: 'CLH BUSTILLOS', pin: '10525' },
+      { id: 'b10520', code: '10520', name: 'CLH MACEDA', pin: '10520' },
+      { id: 'b10524', code: '10524', name: 'CLH ESPAÑA 2', pin: '10524' },
+      { id: 'b10226', code: '10226', name: 'CLH MAYON 2', pin: '10226' },
+      { id: 'b60118', code: '60118', name: 'CLH DAPITAN 4', pin: '60118' },
+      { id: 'b60177', code: '60177', name: 'CLH TRABAJO 2', pin: '60177' },
+      { id: 'b60180', code: '60180', name: 'CLH ESPAÑA 3', pin: '60180' },
+      { id: 'b60313', code: '60313', name: 'CLH MAYON 3', pin: '60313' },
+      { id: 'b60325', code: '60325', name: 'CLH SAN MARCELINO', pin: '60325' },
+      { id: 'b60590', code: '60590', name: 'CLH N.S. AMORANTO', pin: '60590' },
+      { id: 'b60606', code: '60606', name: 'CLH SAMPALOC', pin: '60606' },
+      { id: 'b60647', code: '60647', name: 'CLH M. DELA FUENTE', pin: '60647' },
+      { id: 'b60771', code: '60771', name: 'CLH IBARRA SAMPALOC', pin: '60771' },
+      { id: 'b60794', code: '60794', name: 'CLH CLARO M. RECTO Manila', pin: '60794' },
+      { id: 'b61003', code: '61003', name: 'CLH E. RODRIGUEZ-BANAWE', pin: '61003' },
+      { id: 'b61306', code: '61306', name: 'CLH GALAS MARKET', pin: '61306' },
+      { id: 'b61264', code: '61264', name: 'CLH LACSON-ALCANTARA', pin: '61264' },
+      { id: 'b61366', code: '61366', name: 'CLH EARNSHAW SAMPALOC', pin: '61366' },
+      { id: 'b61361', code: '61361', name: 'CLH MABINI-KALAW', pin: '61361' },
+      { id: 'b61410', code: '61410', name: 'CLH MACEDA-RETIRO', pin: '61410' },
+      { id: 'b61459', code: '61459', name: 'CLH LEGARDA PLACE', pin: '61459' },
+      { id: 'b61485', code: '61485', name: 'CLH JHOCSON', pin: '61485' },
+      { id: 'b61550', code: '61550', name: 'CLH SAN ANTON', pin: '61550' },
+      { id: 'b61556', code: '61556', name: 'CLH DAPITAN- MACEDA', pin: '61556' },
+      { id: 'b61554', code: '61554', name: 'CLH E. RODRIGUEZ- Q.C.', pin: '61554' },
+      { id: 'b61948', code: '61948', name: 'CLH Z.P GUZMAN', pin: '61948' },
+      { id: 'b62098', code: '62098', name: 'CLH MAYON ST', pin: '62098' },
+      { id: 'b62105', code: '62105', name: 'CLH MAYON RETIRO', pin: '62105' },
+      { id: 'b62141', code: '62141', name: 'CLH BAYANI ST. GALAS', pin: '62141' },
+      { id: 'b62566', code: '62566', name: 'CLH MARIA CLARA', pin: '62566' },
+      { id: 'b62571', code: '62571', name: 'CLH ISAGANI', pin: '62571' },
+      { id: 'b62707', code: '62707', name: 'CLH DOMINGO SANTIAGO', pin: '62707' },
+      { id: 'b62751', code: '62751', name: 'CLH PRUDENCIO', pin: '62751' },
+      { id: 'b63137', code: '63137', name: 'CLH M. DELA FUENTE AREVALO', pin: '63137' },
+      { id: 'b10515', code: '10515', name: 'CLH QUEZON BLVD STA CRUZ', pin: '10515' }
+    ];
+
+    let DEFAULT_ADMIN = {
+      email: 'admin@area105.com',
+      pass: 'ADMIN105'
+    };
+
+    // State Variables
+    let currentUser = null;
+    let selectedYear = 2026;
+    let selectedMonth = "July";
+    let selectedDay = 26;
+
+    let adminActiveTab = 'today';
+
+    let googleSheetsUrl = localStorage.getItem('area105_sheets_url_v4') || '';
+    let branches = JSON.parse(localStorage.getItem('area105_branches_v4')) || DEFAULT_BRANCHES;
+    let adminCredentials = JSON.parse(localStorage.getItem('area105_admin_v4')) || DEFAULT_ADMIN;
+    let scoresData = JSON.parse(localStorage.getItem('area105_daily_scores_v4')) || {};
+    let lastSyncedTime = null;
+
+    function updateSyncIndicator(status, text) {
+      const dot = document.getElementById('syncDot');
+      const txt = document.getElementById('syncText');
+      if (!dot || !txt) return;
+
+      if (status === 'online') {
+        const timeStr = lastSyncedTime ? ` (${lastSyncedTime})` : '';
+        dot.className = "inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse me-1.5";
+        txt.textContent = text || `Google Sheets Synced${timeStr}`;
+      } else if (status === 'syncing') {
+        dot.className = "inline-block w-2 h-2 rounded-full bg-amber-400 me-1.5";
+        txt.textContent = text || "Syncing Cloud...";
+      } else {
+        dot.className = "inline-block w-2 h-2 rounded-full bg-slate-400 me-1.5";
+        txt.textContent = text || "Offline / Local Storage";
+      }
+    }
+
+    async function fetchFromGoogleSheets() {
+      if (!googleSheetsUrl) {
+        updateSyncIndicator('offline');
+        return;
+      }
+
+      updateSyncIndicator('syncing', 'Fetching Cloud Data...');
+      try {
+        const res = await fetch(googleSheetsUrl);
+        const cloudData = await res.json();
+        if (cloudData && typeof cloudData === 'object') {
+          scoresData = cloudData;
+          localStorage.setItem('area105_daily_scores_v4', JSON.stringify(scoresData));
+          lastSyncedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          updateSyncIndicator('online');
+
+          if (currentUser && currentUser.role === 'branch') {
+            loadBranchPortalData();
+          } else if (currentUser && currentUser.role === 'admin') {
+            renderMasterTable();
+          }
+        }
+      } catch (err) {
+        console.warn('Google Sheets Fetch Error:', err);
+        updateSyncIndicator('offline', 'Sheets Sync Failed (Local Active)');
+      }
+    }
+
+    async function pushToGoogleSheets() {
+      if (!googleSheetsUrl) return;
+
+      updateSyncIndicator('syncing', 'Saving to Google Sheets...');
+      try {
+        await fetch(googleSheetsUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(scoresData)
+        });
+        lastSyncedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        updateSyncIndicator('online');
+      } catch (err) {
+        console.warn('Google Sheets Push Error:', err);
+        updateSyncIndicator('offline', 'Local Saved (Cloud Error)');
+      }
+    }
+
+    function saveGoogleSheetsUrl() {
+      const urlInput = document.getElementById('modalGoogleSheetUrl').value.trim();
+      googleSheetsUrl = urlInput;
+      localStorage.setItem('area105_sheets_url_v4', googleSheetsUrl);
+      showNotification('Google Sheets Web App URL Saved!');
+      fetchFromGoogleSheets();
+    }
+
+    function showAppsScriptCodeModal() {
+      document.getElementById('appsScriptModal').classList.remove('hidden');
+    }
+
+    function closeAppsScriptCodeModal() {
+      document.getElementById('appsScriptModal').classList.add('hidden');
+    }
+
+    function copyAppsScriptCode() {
+      const text = document.getElementById('appsScriptCodeText').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        showNotification('Apps Script code copied to clipboard!');
+      });
+    }
+
+    function toggleMonthlyTallies() {
+      const container = document.getElementById('monthlyProductTallyGridContainer');
+      const icon = document.getElementById('toggleMonthlyIcon');
+      const text = document.getElementById('toggleMonthlyText');
+      if (container.classList.contains('hidden')) {
+        container.classList.remove('hidden');
+        icon.className = 'fa-solid fa-eye-slash';
+        text.textContent = 'Hide Monthly Tallies';
+      } else {
+        container.classList.add('hidden');
+        icon.className = 'fa-solid fa-eye';
+        text.textContent = 'Show Monthly Tallies';
+      }
+    }
+
+    function showNotification(msg, type = 'success') {
+      const toast = document.getElementById('toastNotification');
+      if (!toast) return;
+      const msgEl = document.getElementById('toastMsg');
+      const iconEl = document.getElementById('toastIcon');
+      msgEl.textContent = msg;
+      
+      if (type === 'error') {
+        toast.className = 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg font-semibold text-xs transition-all duration-300 flex items-center gap-2 bg-rose-600 text-white';
+        iconEl.className = 'fa-solid fa-circle-exclamation';
+      } else {
+        toast.className = 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg font-semibold text-xs transition-all duration-300 flex items-center gap-2 bg-emerald-600 text-white';
+        iconEl.className = 'fa-solid fa-circle-check';
+      }
+      
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3000);
+    }
+
+    function getDaysInMonth(year, monthName) {
+      const monthIdx = MONTHS_LIST.indexOf(monthName);
+      if (monthIdx === -1) return 31;
+      return new Date(year, monthIdx + 1, 0).getDate();
+    }
+
+    function formatDateForInput(y, mName, d) {
+      const mIdx = MONTHS_LIST.indexOf(mName) + 1;
+      const mm = mIdx < 10 ? '0' + mIdx : mIdx;
+      const dd = d < 10 ? '0' + d : d;
+      return `${y}-${mm}-${dd}`;
+    }
+
+    function parseInputDate(valStr) {
+      if (!valStr) return;
+      const parts = valStr.split('-');
+      if (parts.length === 3) {
+        selectedYear = parseInt(parts[0], 10);
+        const mIdx = parseInt(parts[1], 10) - 1;
+        selectedMonth = MONTHS_LIST[mIdx] || "July";
+        selectedDay = parseInt(parts[2], 10);
+      }
+    }
+
+    function computeBranchMetrics(prods) {
+      const safeProds = Array.isArray(prods) ? prods : [0,0,0,0,0,0,0,0,0,0];
+      const totalClients = safeProds.reduce((a, b) => a + (Number(b) || 0), 0);
+      const clients4Plus = safeProds.slice(3).reduce((a, b) => a + (Number(b) || 0), 0);
+      
+      let score4Plus = 0;
+      for (let i = 3; i < 10; i++) {
+        const clientCount = Number(safeProds[i]) || 0;
+        const multiplier = i + 1;
+        score4Plus += clientCount * multiplier;
+      }
+
+      const mpa = totalClients > 0 ? (score4Plus / totalClients) : 0;
+      return { totalClients, clients4Plus, score4Plus, mpa };
+    }
+
+    function getDailyProds(year, month, day, branchId) {
+      if (scoresData[year] && scoresData[year][month] && scoresData[year][month][day] && scoresData[year][month][day][branchId]) {
+        return scoresData[year][month][day][branchId];
+      }
+      return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    }
+
+    function syncBranchDatePicker() {
+      const picker = document.getElementById('branchDatePicker');
+      if (picker) {
+        picker.value = formatDateForInput(selectedYear, selectedMonth, selectedDay);
+      }
+    }
+
+    function onBranchDatePickerChange(val) {
+      parseInputDate(val);
+      loadBranchPortalData();
+    }
+
+    function handleInputFocus(input) {
+      if (input.value === "0") input.value = "";
+    }
+
+    function handleInputBlur(input) {
+      if (input.value === "") input.value = "0";
+    }
+
+    function togglePassword(id) {
+      const el = document.getElementById(id);
+      if (el) el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    function populateBranchDropdown() {
+      const sel = document.getElementById('branchSelect');
+      sel.innerHTML = '<option value="">-- Choose Branch --</option>';
+      branches.forEach(b => {
+        sel.innerHTML += `<option value="${b.id}">${b.code} - ${b.name}</option>`;
+      });
+    }
+
+    function switchLoginMode(mode) {
+      const bTab = document.getElementById('branchLoginTab');
+      const aTab = document.getElementById('adminLoginTab');
+      const bForm = document.getElementById('branchLoginForm');
+      const aForm = document.getElementById('adminLoginForm');
+      const err = document.getElementById('loginError');
+
+      err.classList.add('hidden');
+
+      if (mode === 'branch') {
+        bTab.className = "flex-1 py-3 text-center text-cebuana-blue border-b-2 border-cebuana-blue bg-white font-semibold";
+        aTab.className = "flex-1 py-3 text-center text-slate-500 hover:text-slate-700 font-semibold";
+        bForm.classList.remove('hidden');
+        aForm.classList.add('hidden');
+      } else {
+        aTab.className = "flex-1 py-3 text-center text-amber-600 border-b-2 border-amber-600 bg-white font-semibold";
+        bTab.className = "flex-1 py-3 text-center text-slate-500 hover:text-slate-700 font-semibold";
+        aForm.classList.remove('hidden');
+        bForm.classList.add('hidden');
+      }
+    }
+
+    function handleBranchLogin(e) {
+      e.preventDefault();
+      const bId = document.getElementById('branchSelect').value;
+      const pin = document.getElementById('branchPinInput').value.trim();
+      const err = document.getElementById('loginError');
+
+      const branch = branches.find(b => b.id === bId);
+      if (branch && branch.pin === pin) {
+        currentUser = { role: 'branch', branchId: branch.id, code: branch.code, name: branch.name };
+        setupDashboardView();
+      } else {
+        document.getElementById('loginErrorMsg').textContent = 'Invalid Branch or PIN.';
+        err.classList.remove('hidden');
+      }
+    }
+
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('adminEmailInput').value.trim();
+      const pass = document.getElementById('adminPassInput').value.trim();
+      const err = document.getElementById('loginError');
+
+      if (email === adminCredentials.email && pass === adminCredentials.pass) {
+        currentUser = { role: 'admin', code: 'ADMIN', name: 'Area Administrator' };
+        setupDashboardView();
+      } else {
+        document.getElementById('loginErrorMsg').textContent = 'Invalid Admin Email or Key.';
+        err.classList.remove('hidden');
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('dashboardSection').classList.add('hidden');
+      document.getElementById('loginSection').classList.remove('hidden');
+      document.getElementById('userBadge').classList.add('hidden');
+      document.getElementById('logoutBtn').classList.add('hidden');
+      document.getElementById('adminSettingsBtn').classList.add('hidden');
+      document.getElementById('syncIndicator').classList.add('hidden');
+      document.getElementById('branchPinInput').value = '';
+      document.getElementById('adminPassInput').value = '';
+    }
+
+    function setupDashboardView() {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('dashboardSection').classList.remove('hidden');
+      document.getElementById('syncIndicator').classList.remove('hidden');
+
+      const badge = document.getElementById('userBadge');
+      const nameDisp = document.getElementById('userNameDisplay');
+      const userIcon = document.getElementById('userIcon');
+
+      badge.classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.remove('hidden');
+
+      if (currentUser.role === 'branch') {
+        nameDisp.textContent = `${currentUser.code} - ${currentUser.name}`;
+        userIcon.className = "fa-solid fa-store text-amber-400 me-2";
+        document.getElementById('adminSettingsBtn').classList.add('hidden');
+        document.getElementById('branchPortalView').classList.remove('hidden');
+        document.getElementById('adminPortalView').classList.add('hidden');
+        loadBranchPortalData();
+      } else {
+        nameDisp.textContent = currentUser.name;
+        userIcon.className = "fa-solid fa-user-shield text-amber-400 me-2";
+        document.getElementById('adminSettingsBtn').classList.remove('hidden');
+        document.getElementById('branchPortalView').classList.add('hidden');
+        document.getElementById('adminPortalView').classList.remove('hidden');
+        renderAdminDateControls();
+        renderMasterTable();
+      }
+
+      fetchFromGoogleSheets();
+    }
+
+    function computeBranchMonthlyTotals(year, month, branchId) {
+      let monthlyProds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      const totalDays = getDaysInMonth(year, month);
+
+      for (let d = 1; d <= totalDays; d++) {
+        const dayP = getDailyProds(year, month, d, branchId);
+        dayP.forEach((v, idx) => monthlyProds[idx] += v);
+      }
+
+      const m = computeBranchMetrics(monthlyProds);
+      return {
+        monthlyProds,
+        totalClients: m.totalClients,
+        clients4Plus: m.clients4Plus,
+        score4Plus: m.score4Plus,
+        mpa: m.mpa
+      };
+    }
+
+    function updateBranchMonthlyTopCards() {
+      if (!currentUser || currentUser.role !== 'branch') return;
+
+      const bId = currentUser.branchId;
+      const mData = computeBranchMonthlyTotals(selectedYear, selectedMonth, bId);
+
+      document.getElementById('statCard1Label').textContent = `MONTHLY CLIENTS (${selectedMonth} ${selectedYear})`;
+      document.getElementById('statTotalClients').textContent = mData.totalClients.toLocaleString();
+      document.getElementById('statCard1Sub').innerHTML = `<i class="fa-solid fa-calendar-check text-cebuana-blue me-1"></i>Cumulative P1 to P10 for ${selectedMonth}`;
+
+      document.getElementById('statCard2Label').textContent = `MONTHLY 4+ CLIENTS`;
+      document.getElementById('statClients4Plus').textContent = mData.clients4Plus.toLocaleString();
+      document.getElementById('statCard2Sub').innerHTML = `<i class="fa-solid fa-check-double me-1 text-emerald-600"></i>Accumulated 4+ clients for ${selectedMonth}`;
+
+      document.getElementById('statCard3Label').textContent = `MONTHLY 4+ PROD VOLUME`;
+      document.getElementById('statTotalProducts').textContent = mData.score4Plus.toLocaleString();
+      document.getElementById('statCard3Sub').innerHTML = `<i class="fa-solid fa-award me-1 text-indigo-600"></i>Accumulated product score`;
+
+      document.getElementById('statCard4Label').textContent = `CONSOLIDATED MPA RATIO`;
+      document.getElementById('statAreaMpa').textContent = mData.mpa.toFixed(2);
+      document.getElementById('statCard4Sub').innerHTML = `<i class="fa-solid fa-calculator me-1 text-emerald-600"></i>Monthly Vol / Monthly Clients`;
+
+      const grid = document.getElementById('monthlyProductTallyGrid');
+      const header = document.getElementById('monthlyBreakdownHeader');
+      if (header) header.textContent = `${selectedMonth.toUpperCase()} ${selectedYear}`;
+
+      if (grid) {
+        grid.innerHTML = '';
+        mData.monthlyProds.forEach((val, idx) => {
+          const pNum = idx + 1;
+          const isEx = pNum <= 3;
+          grid.innerHTML += `
+            <div class="${isEx ? 'bg-slate-200/80 border-slate-300' : 'bg-amber-100/80 border-amber-300'} p-2 rounded-lg border">
+              <span class="block text-[10px] font-bold ${isEx ? 'text-slate-600' : 'text-amber-800'}">P${pNum} ${isEx ? '' : '(4+)'}</span>
+              <span class="text-sm font-black ${isEx ? 'text-slate-800' : 'text-amber-950'}">${val.toLocaleString()}</span>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function loadBranchPortalData() {
+      if (!currentUser || currentUser.role !== 'branch') return;
+      const bId = currentUser.branchId;
+
+      syncBranchDatePicker();
+
+      document.getElementById('bvBranchCode').textContent = currentUser.code;
+      document.getElementById('bvBranchName').textContent = currentUser.name;
+      document.getElementById('branchActiveDateDisplay').textContent = `${selectedMonth.toUpperCase()} ${selectedDay}, ${selectedYear}`;
+      document.getElementById('branchMonthLogHeader').textContent = `${selectedMonth.toUpperCase()} ${selectedYear}`;
+      document.getElementById('branchMonthLogName').textContent = currentUser.name;
+
+      const pScores = getDailyProds(selectedYear, selectedMonth, selectedDay, bId);
+
+      for (let i = 1; i <= 10; i++) {
+        document.getElementById(`bInput_${i}`).value = pScores[i - 1] !== undefined ? pScores[i - 1] : 0;
+      }
+
+      calcBranchPreview();
+      updateBranchMonthlyTopCards();
+      renderBranchDailyHistory();
+    }
+
+    async function saveBranchDailyScore() {
+      if (!currentUser || currentUser.role !== 'branch') return;
+      const bId = currentUser.branchId;
+
+      const prods = [];
+      for (let i = 1; i <= 10; i++) {
+        prods.push(parseInt(document.getElementById(`bInput_${i}`).value, 10) || 0);
+      }
+
+      if (!scoresData[selectedYear]) scoresData[selectedYear] = {};
+      if (!scoresData[selectedYear][selectedMonth]) scoresData[selectedYear][selectedMonth] = {};
+      if (!scoresData[selectedYear][selectedMonth][selectedDay]) scoresData[selectedYear][selectedMonth][selectedDay] = {};
+
+      scoresData[selectedYear][selectedMonth][selectedDay][bId] = prods;
+
+      localStorage.setItem('area105_daily_scores_v4', JSON.stringify(scoresData));
+
+      updateBranchMonthlyTopCards();
+      renderBranchDailyHistory();
+      showNotification('Daily tally saved locally!');
+
+      // Push to Google Sheets Cloud
+      pushToGoogleSheets();
+    }
+
+    function calcBranchPreview() {
+      const prods = [];
+      for (let i = 1; i <= 10; i++) {
+        prods.push(parseInt(document.getElementById(`bInput_${i}`).value, 10) || 0);
+      }
+
+      const m = computeBranchMetrics(prods);
+
+      document.getElementById('bvTotalClients').textContent = m.totalClients.toLocaleString();
+      document.getElementById('bv4Plus').textContent = m.clients4Plus.toLocaleString();
+      document.getElementById('bvTotalProducts').textContent = m.score4Plus.toLocaleString();
+      document.getElementById('bvMpa').textContent = m.mpa.toFixed(2);
+
+      // Update Mobile Floating Action Bar
+      const mClients = document.getElementById('mobileSummaryClients');
+      const mMpa = document.getElementById('mobileSummaryMpa');
+      if (mClients) mClients.textContent = m.totalClients.toLocaleString();
+      if (mMpa) mMpa.textContent = m.mpa.toFixed(2);
+    }
+
+    function renderBranchDailyHistory() {
+      const tbody = document.getElementById('branchDailyHistoryBody');
+      tbody.innerHTML = '';
+
+      const bId = currentUser.branchId;
+      const totalDays = getDaysInMonth(selectedYear, selectedMonth);
+
+      for (let d = 1; d <= totalDays; d++) {
+        const pScores = getDailyProds(selectedYear, selectedMonth, d, bId);
+        const m = computeBranchMetrics(pScores);
+
+        const isCurrentDay = (d === selectedDay);
+        const rowBg = isCurrentDay ? "bg-amber-100/70 font-bold" : "hover:bg-slate-50";
+
+        let tr = `<tr class="${rowBg} cursor-pointer" onclick="selectDayDirectly(${d})">
+          <td class="p-2 font-bold text-slate-800">Day ${d}</td>`;
+
+        pScores.forEach((v, idx) => {
+          const isEx = idx < 3;
+          tr += `<td class="p-1.5 text-center ${isEx ? 'text-slate-400' : 'text-amber-900 font-semibold'}">${v > 0 ? v : '-'}</td>`;
+        });
+
+        tr += `
+          <td class="p-2 text-center font-bold text-blue-900 bg-blue-50/50">${m.totalClients}</td>
+          <td class="p-2 text-center font-bold text-amber-900 bg-amber-50/50">${m.clients4Plus}</td>
+          <td class="p-2 text-center font-bold text-indigo-900 bg-indigo-50/50">${m.score4Plus}</td>
+          <td class="p-2 text-center font-extrabold text-emerald-700 bg-emerald-50/30">${m.mpa.toFixed(2)}</td>
+        </tr>`;
+
+        tbody.innerHTML += tr;
+      }
+    }
+
+    function selectDayDirectly(day) {
+      selectedDay = day;
+      syncBranchDatePicker();
+      loadBranchPortalData();
+    }
+
+    function switchAdminTab(tab) {
+      adminActiveTab = tab;
+
+      const tToday = document.getElementById('adminTabToday');
+      const tMonth = document.getElementById('adminTabMonthly');
+      const tYear = document.getElementById('adminTabYearly');
+
+      [tToday, tMonth, tYear].forEach(btn => {
+        btn.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 font-semibold";
+      });
+
+      if (tab === 'today') tToday.className = "px-3 py-1.5 rounded-lg bg-white shadow text-cebuana-blue font-bold";
+      if (tab === 'monthly') tMonth.className = "px-3 py-1.5 rounded-lg bg-white shadow text-cebuana-blue font-bold";
+      if (tab === 'yearly') tYear.className = "px-3 py-1.5 rounded-lg bg-white shadow text-cebuana-blue font-bold";
+
+      renderAdminDateControls();
+      renderMasterTable();
+    }
+
+    function renderAdminDateControls() {
+      const container = document.getElementById('adminDateSelectorContainer');
+      const badge = document.getElementById('adminPeriodBadge');
+      container.innerHTML = '';
+
+      if (adminActiveTab === 'today') {
+        container.innerHTML = `
+          <label class="font-bold text-slate-600">Select Date:</label>
+          <input type="date" id="adminDatePicker" onchange="onAdminDatePickerChange(this.value)" value="${formatDateForInput(selectedYear, selectedMonth, selectedDay)}" class="border border-slate-300 rounded px-2 py-1 bg-white font-semibold text-xs cursor-pointer">
+        `;
+        badge.textContent = `TODAY TALLY (${selectedMonth} ${selectedDay}, ${selectedYear})`;
+      } else if (adminActiveTab === 'monthly') {
+        container.innerHTML = `
+          <label class="font-bold text-slate-600">Year:</label>
+          <select id="adminYearSel" onchange="updateAdminDateState()" class="border rounded px-2 py-1 bg-white font-semibold">
+            ${[2024, 2025, 2026, 2027, 2028, 2029, 2030].map(y => `<option value="${y}" ${y === selectedYear ? 'selected' : ''}>${y}</option>`).join('')}
+          </select>
+          <label class="font-bold text-slate-600 ms-2">Month:</label>
+          <select id="adminMonthSel" onchange="updateAdminDateState()" class="border rounded px-2 py-1 bg-white font-semibold">
+            ${MONTHS_LIST.map(m => `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${m}</option>`).join('')}
+          </select>
+        `;
+        badge.textContent = `MONTHLY TALLY (${selectedMonth} ${selectedYear})`;
+      } else if (adminActiveTab === 'yearly') {
+        container.innerHTML = `
+          <label class="font-bold text-slate-600">Year:</label>
+          <select id="adminYearSel" onchange="updateAdminDateState()" class="border rounded px-2 py-1 bg-white font-semibold">
+            ${[2024, 2025, 2026, 2027, 2028, 2029, 2030].map(y => `<option value="${y}" ${y === selectedYear ? 'selected' : ''}>${y}</option>`).join('')}
+          </select>
+        `;
+        badge.textContent = `YEARLY YTD TALLY (${selectedYear})`;
+      }
+    }
+
+    function onAdminDatePickerChange(val) {
+      parseInputDate(val);
+      renderAdminDateControls();
+      renderMasterTable();
+    }
+
+    function updateAdminDateState() {
+      const yearSel = document.getElementById('adminYearSel');
+      const monthSel = document.getElementById('adminMonthSel');
+
+      if (yearSel) selectedYear = parseInt(yearSel.value, 10) || 2026;
+      if (monthSel) selectedMonth = monthSel.value;
+
+      renderAdminDateControls();
+      renderMasterTable();
+    }
+
+    function renderMasterTable() {
+      const tbody = document.getElementById('scoringTableBody');
+      const tfoot = document.getElementById('tableFootRow');
+      tbody.innerHTML = '';
+
+      let areaTotalClients = 0;
+      let areaClients4Plus = 0;
+      let areaScore4Plus = 0;
+
+      branches.forEach(branch => {
+        let aggregatedProds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        if (adminActiveTab === 'today') {
+          aggregatedProds = getDailyProds(selectedYear, selectedMonth, selectedDay, branch.id);
+        } else if (adminActiveTab === 'monthly') {
+          const totalDays = getDaysInMonth(selectedYear, selectedMonth);
+          for (let d = 1; d <= totalDays; d++) {
+            const dayP = getDailyProds(selectedYear, selectedMonth, d, branch.id);
+            dayP.forEach((val, idx) => aggregatedProds[idx] += val);
+          }
+        } else if (adminActiveTab === 'yearly') {
+          MONTHS_LIST.forEach(m => {
+            const totalDays = getDaysInMonth(selectedYear, m);
+            for (let d = 1; d <= totalDays; d++) {
+              const dayP = getDailyProds(selectedYear, m, d, branch.id);
+              dayP.forEach((val, idx) => aggregatedProds[idx] += val);
+            }
+          });
+        }
+
+        const m = computeBranchMetrics(aggregatedProds);
+
+        areaTotalClients += m.totalClients;
+        areaClients4Plus += m.clients4Plus;
+        areaScore4Plus += m.score4Plus;
+
+        let trHtml = `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-2.5 text-center font-bold text-slate-700">${branch.code}</td>
+            <td class="p-2.5 font-semibold text-slate-900">${branch.name}</td>
+        `;
+
+        for (let i = 0; i < 3; i++) {
+          const val = aggregatedProds[i];
+          trHtml += `<td class="p-2 text-center text-slate-400 font-medium">${val > 0 ? val : '-'}</td>`;
+        }
+
+        for (let i = 3; i < 10; i++) {
+          const val = aggregatedProds[i];
+          trHtml += `<td class="p-2 text-center text-amber-900 font-bold bg-amber-50/20">${val > 0 ? val : '<span class="text-slate-300">0</span>'}</td>`;
+        }
+
+        trHtml += `
+          <td class="p-2.5 text-center font-bold text-blue-900 bg-blue-50/50">${m.totalClients}</td>
+          <td class="p-2.5 text-center font-bold text-amber-900 bg-amber-50/50">${m.clients4Plus}</td>
+          <td class="p-2.5 text-center font-bold text-indigo-900 bg-indigo-50/40">${m.score4Plus}</td>
+          <td class="p-2.5 text-center font-black text-emerald-700 bg-emerald-50/30">${m.mpa.toFixed(2)}</td>
+        `;
+
+        if (currentUser && currentUser.role === 'admin' && adminActiveTab === 'today') {
+          trHtml += `
+            <td class="p-2 text-center">
+              <button onclick="openEditRowModal('${branch.id}')" class="bg-slate-200 hover:bg-amber-500 hover:text-white px-2 py-1 rounded text-[10px] font-bold transition">
+                <i class="fa-solid fa-pen"></i> Edit
+              </button>
+            </td>
+          `;
+        } else {
+          trHtml += `<td class="p-2 text-center text-[10px] text-slate-400">-</td>`;
+        }
+
+        trHtml += `</tr>`;
+        tbody.innerHTML += trHtml;
+      });
+
+      const areaMpa = areaTotalClients > 0 ? (areaScore4Plus / areaTotalClients) : 0;
+
+      // Update Top Cards
+      document.getElementById('statCard1Label').textContent = `TOTAL CLIENTS (${adminActiveTab.toUpperCase()})`;
+      document.getElementById('statTotalClients').textContent = areaTotalClients.toLocaleString();
+      document.getElementById('statCard1Sub').innerHTML = `<i class="fa-solid fa-users text-cebuana-blue me-1"></i>P1 to P10 across all branches`;
+
+      document.getElementById('statCard2Label').textContent = `CLIENTS W/ 4+ PRODUCTS`;
+      document.getElementById('statClients4Plus').textContent = areaClients4Plus.toLocaleString();
+      document.getElementById('statCard2Sub').innerHTML = `<i class="fa-solid fa-check-double me-1 text-emerald-600"></i>Total 4+ clients count`;
+
+      document.getElementById('statCard3Label').textContent = `4+ PRODUCTS VOL`;
+      document.getElementById('statTotalProducts').textContent = areaScore4Plus.toLocaleString();
+      document.getElementById('statCard3Sub').innerHTML = `<i class="fa-solid fa-award me-1 text-indigo-600"></i>Accumulated score`;
+
+      document.getElementById('statCard4Label').textContent = `AREA 105 CONSOLIDATED MPA`;
+      document.getElementById('statAreaMpa').textContent = areaMpa.toFixed(2);
+      document.getElementById('statCard4Sub').innerHTML = `<i class="fa-solid fa-chart-pie me-1 text-emerald-600"></i>Total Volume / Total Clients`;
+
+      tfoot.innerHTML = `
+        <tr>
+          <td colspan="2" class="p-3 text-right font-black uppercase text-slate-800">AREA 105 GRAND TOTALS:</td>
+          <td colspan="3" class="p-3 text-center text-slate-400 text-[10px]">Base</td>
+          <td colspan="7" class="p-3 text-center text-amber-800 text-[10px] font-bold">4+ Product Multiplier Volume</td>
+          <td class="p-3 text-center text-blue-900 font-black bg-blue-100 text-sm">${areaTotalClients.toLocaleString()}</td>
+          <td class="p-3 text-center text-amber-900 font-black bg-amber-100 text-sm">${areaClients4Plus.toLocaleString()}</td>
+          <td class="p-3 text-center text-indigo-900 font-black bg-indigo-100 text-sm">${areaScore4Plus.toLocaleString()}</td>
+          <td class="p-3 text-center text-emerald-800 font-black bg-emerald-100 text-sm">${areaMpa.toFixed(2)}</td>
+          <td></td>
+        </tr>
+      `;
+    }
+
+    function filterTable() {
+      const q = document.getElementById('tableSearch').value.toLowerCase();
+      const rows = document.querySelectorAll('#scoringTableBody tr');
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    function openAdminModal() {
+      document.getElementById('modalAdminEmail').value = adminCredentials.email;
+      document.getElementById('modalAdminPass').value = adminCredentials.pass;
+      document.getElementById('modalGoogleSheetUrl').value = googleSheetsUrl;
+
+      const listDiv = document.getElementById('branchPinList');
+      listDiv.innerHTML = '';
+      branches.forEach(b => {
+        listDiv.innerHTML += `
+          <div class="p-2.5 flex items-center justify-between hover:bg-slate-50">
+            <div>
+              <span class="font-bold text-slate-800">${b.code}</span> - ${b.name}
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">PIN:</span>
+              <input type="text" value="${b.pin}" onchange="updateBranchPin('${b.id}', this.value)" class="w-20 px-2 py-0.5 text-xs border rounded font-mono text-center">
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('adminModal').classList.remove('hidden');
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+    }
+
+    function saveAdminCredentials() {
+      const newEmail = document.getElementById('modalAdminEmail').value.trim();
+      const newPass = document.getElementById('modalAdminPass').value.trim();
+
+      if (!newEmail || !newPass) {
+        showNotification('Email and password cannot be empty.', 'error');
+        return;
+      }
+
+      adminCredentials = { email: newEmail, pass: newPass };
+      localStorage.setItem('area105_admin_v4', JSON.stringify(adminCredentials));
+      showNotification('Admin credentials updated successfully!');
+    }
+
+    function updateBranchPin(bId, newPin) {
+      const branch = branches.find(b => b.id === bId);
+      if (branch) {
+        branch.pin = newPin.trim();
+        localStorage.setItem('area105_branches_v4', JSON.stringify(branches));
+        showNotification(`PIN updated for ${branch.name}`);
+      }
+    }
+
+    function resetAllPinsToDefault() {
+      branches.forEach(b => b.pin = b.code);
+      localStorage.setItem('area105_branches_v4', JSON.stringify(branches));
+      openAdminModal();
+      showNotification('All branch PINs reset to default branch codes.');
+    }
+
+    function openEditRowModal(bId) {
+      const branch = branches.find(b => b.id === bId);
+      if (!branch) return;
+
+      document.getElementById('editBranchId').value = bId;
+      document.getElementById('editRowTitle').textContent = `Edit Scores: ${branch.name} (${selectedMonth} ${selectedDay}, ${selectedYear})`;
+
+      const pScores = getDailyProds(selectedYear, selectedMonth, selectedDay, bId);
+
+      for (let i = 1; i <= 10; i++) {
+        document.getElementById(`adminProdInput_${i}`).value = pScores[i - 1] || 0;
+      }
+
+      document.getElementById('editRowModal').classList.remove('hidden');
+    }
+
+    function closeEditRowModal() {
+      document.getElementById('editRowModal').classList.add('hidden');
+    }
+
+    function saveAdminRowEdit() {
+      const bId = document.getElementById('editBranchId').value;
+      const prods = [];
+      for (let i = 1; i <= 10; i++) {
+        prods.push(parseInt(document.getElementById(`adminProdInput_${i}`).value, 10) || 0);
+      }
+
+      if (!scoresData[selectedYear]) scoresData[selectedYear] = {};
+      if (!scoresData[selectedYear][selectedMonth]) scoresData[selectedYear][selectedMonth] = {};
+      if (!scoresData[selectedYear][selectedMonth][selectedDay]) scoresData[selectedYear][selectedMonth][selectedDay] = {};
+
+      scoresData[selectedYear][selectedMonth][selectedDay][bId] = prods;
+
+      localStorage.setItem('area105_daily_scores_v4', JSON.stringify(scoresData));
+      closeEditRowModal();
+      renderMasterTable();
+      showNotification('Branch daily score updated by Admin.');
+
+      pushToGoogleSheets();
+    }
+
+    function exportToCSV() {
+      let titleTag = `AREA 105 MPA SCORING REPORT - ${adminActiveTab.toUpperCase()} (${selectedMonth} ${selectedDay}, ${selectedYear})`;
+      let csv = `${titleTag}\n`;
+      csv += `Branch Code,Branch Name,P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,Total Clients,Clients 4+ Prod,4+ Prod Score,MPA Ratio\n`;
+
+      branches.forEach(b => {
+        let aggregatedProds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        if (adminActiveTab === 'today') {
+          aggregatedProds = getDailyProds(selectedYear, selectedMonth, selectedDay, b.id);
+        } else if (adminActiveTab === 'monthly') {
+          const totalDays = getDaysInMonth(selectedYear, selectedMonth);
+          for (let d = 1; d <= totalDays; d++) {
+            const dayP = getDailyProds(selectedYear, selectedMonth, d, b.id);
+            dayP.forEach((v, idx) => aggregatedProds[idx] += v);
+          }
+        } else if (adminActiveTab === 'yearly') {
+          MONTHS_LIST.forEach(m => {
+            const totalDays = getDaysInMonth(selectedYear, m);
+            for (let d = 1; d <= totalDays; d++) {
+              const dayP = getDailyProds(selectedYear, m, d, b.id);
+              dayP.forEach((v, idx) => aggregatedProds[idx] += v);
+            }
+          });
+        }
+
+        const m = computeBranchMetrics(aggregatedProds);
+        csv += `"${b.code}","${b.name}",${aggregatedProds.join(',')},${m.totalClients},${m.clients4Plus},${m.score4Plus},${m.mpa.toFixed(2)}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'type/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `Area105_MPA_${adminActiveTab}_${selectedMonth}_${selectedYear}.csv`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showNotification('CSV Report exported successfully!');
+    }
+
+    // Initialization on Page Load
+    window.onload = function() {
+      populateBranchDropdown();
+      const today = new Date();
+      selectedYear = today.getFullYear();
+      selectedMonth = MONTHS_LIST[today.getMonth()] || "July";
+      selectedDay = today.getDate();
+      syncBranchDatePicker();
+
+      if (googleSheetsUrl) {
+        updateSyncIndicator('online');
+      } else {
+        updateSyncIndicator('offline');
+      }
+
+      // Online / Offline Listeners for dynamic connection status
+      window.addEventListener('online', () => {
+        showNotification('Internet reconnected! Syncing cloud data...');
+        fetchFromGoogleSheets();
+      });
+
+      window.addEventListener('offline', () => {
+        updateSyncIndicator('offline', 'Device Offline');
+        showNotification('You are offline. Entries will save locally.', 'error');
+      });
+
+      // Periodic Background Auto Sync every 60 seconds if Google Sheets URL is linked
+      setInterval(() => {
+        if (googleSheetsUrl && navigator.onLine) {
+          fetchFromGoogleSheets();
+        }
+      }, 60000);
+    };
+  </script>
+</body>
+</html>
