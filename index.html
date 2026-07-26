@@ -894,6 +894,14 @@ function doPost(e) {
     function showAppsScriptCodeModal() {
       document.getElementById('appsScriptModal').classList.remove('hidden');
     }
+    function closeAppsScriptCodeModal() {
+      document.getElementById('appsScriptModal').classList.add('hidden');
+    }
+function closeAppsScriptCodeModal() {
+    document.getElementById('appScriptModal').classList.add('hidden');
+}
+
+// DITO MO ISISNGIT SA LINE 900:
 async function restoreFromGoogleSheet() {
   if (!googleSheetsUrl) {
     alert("Walang nakaset na Google Sheets URL!");
@@ -926,10 +934,10 @@ async function restoreFromGoogleSheet() {
     alert("Nabigo ang pag-restore ng data.");
   }
 }
-    function closeAppsScriptCodeModal() {
-      document.getElementById('appsScriptModal').classList.add('hidden');
-    }
 
+function copyAppsScriptCode() {
+    const text = document.getElementById('appScriptCodeText').innerText;
+...
     function copyAppsScriptCode() {
       const text = document.getElementById('appsScriptCodeText').innerText;
       navigator.clipboard.writeText(text).then(() => {
