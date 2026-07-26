@@ -863,6 +863,37 @@ function doPost(e) {
         updateSyncIndicator('offline', 'Sheets Sync Failed (Local Active)');
       }
     }
+    <button onclick="restoreFromGoogleSheet()" class="btn-restore">Restore Cloud Backup</button>
+    async function pushToGoogleSheets() {
+      if (!googleSheetsUrl) return;
+
+      updateSyncIndicator('syncing', 'Saving to Google Sheets...');
+      try {
+        await fetch(googleSheetsUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(scoresData)
+        });
+        lastSyncedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        updateSyncIndicator('online');
+      } catch (err) {
+        console.warn('Google Sheets Push Error:', err);
+        updateSyncIndicator('offline', 'Local Saved (Cloud Error)');
+      }
+    }
+
+    function saveGoogleSheetsUrl() {
+      const urlInput = document.getElementById('modalGoogleSheetUrl').value.trim();
+      googleSheetsUrl = urlInput;
+      localStorage.setItem('area105_sheets_url_v4', googleSheetsUrl);
+      showNotification('Google Sheets Web App URL Saved!');
+      fetchFromGoogleSheets();
+    }
+
+    function showAppsScriptCodeModal() {
+      document.getElementById('appsScriptModal').classList.remove('hidden');
+    }
 async function restoreFromGoogleSheet() {
   if (!googleSheetsUrl) {
     alert("Walang nakaset na Google Sheets URL!");
@@ -895,38 +926,6 @@ async function restoreFromGoogleSheet() {
     alert("Nabigo ang pag-restore ng data.");
   }
 }
-    <button onclick="restoreFromGoogleSheet()" class="btn-restore">Restore Cloud Backup</button>
-    async function pushToGoogleSheets() {
-      if (!googleSheetsUrl) return;
-
-      updateSyncIndicator('syncing', 'Saving to Google Sheets...');
-      try {
-        await fetch(googleSheetsUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(scoresData)
-        });
-        lastSyncedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        updateSyncIndicator('online');
-      } catch (err) {
-        console.warn('Google Sheets Push Error:', err);
-        updateSyncIndicator('offline', 'Local Saved (Cloud Error)');
-      }
-    }
-
-    function saveGoogleSheetsUrl() {
-      const urlInput = document.getElementById('modalGoogleSheetUrl').value.trim();
-      googleSheetsUrl = urlInput;
-      localStorage.setItem('area105_sheets_url_v4', googleSheetsUrl);
-      showNotification('Google Sheets Web App URL Saved!');
-      fetchFromGoogleSheets();
-    }
-
-    function showAppsScriptCodeModal() {
-      document.getElementById('appsScriptModal').classList.remove('hidden');
-    }
-
     function closeAppsScriptCodeModal() {
       document.getElementById('appsScriptModal').classList.add('hidden');
     }
