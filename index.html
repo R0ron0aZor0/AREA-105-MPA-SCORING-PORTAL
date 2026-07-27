@@ -1651,58 +1651,54 @@ function doPost(e) {
         }
       }, 60000);
     };
+// Function para sa Pag-backup papuntang Google Sheets
 async function backupDataToGoogleSheets() {
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfD9JlTmt62ptXyW7xBJRd8o5JuCfgu7CGVnQeCXtY0geceOcnurh1IpMytZn5KdDO/exec";
     
-    // Kunin ang tamang local storage key (halimbawa: area105_daily_scores_v4)
     const rawData = localStorage.getItem("area105_daily_scores_v4");
-    
     if (!rawData) {
         alert("Walang makitang data sa LocalStorage para i-backup!");
         return;
     }
 
-    const parsedLocal = JSON.parse(rawData);
-
     const payload = {
         category: "Full Portal Backup",
-        payload: parsedLocal
+        payload: JSON.parse(rawData)
     };
 
     try {
-        const response = await fetch(WEB_APP_URL, {
+        await fetch(WEB_APP_URL, {
             method: "POST",
             mode: "no-cors",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8",
-            },
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
         });
 
         alert("Tagumpay na na-backup ang data sa Google Sheets!");
     } catch (error) {
         console.error("Backup Error:", error);
-        alert("Nabigong i-save ang data.");
+        alert("May error sa pag-save ng data.");
     }
 }
-  async function restoreDataFromGoogleSheets() {
+
+// Function para sa Pag-restore / Pag-sync mula sa Google Sheets (May kasamang auto-reload)
+async function restoreDataFromGoogleSheets() {
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfD9JlTmt62ptXyW7xBJRd8o5JuCfgu7CGVnQeCXtY0geceOcnurh1IpMytZn5KdDO/exec";
 
     try {
         const response = await fetch(WEB_APP_URL);
         const result = await response.json();
 
-        if (result.status === "success" && result.data) {
-            // Suriin kung may laman ang nakuha bago i-save sa localStorage
-            if (Object.keys(result.data).length > 0) {
-                localStorage.setItem("area105_daily_scores_v4", JSON.stringify(result.data));
-                alert("Na-restore na ang data mula sa Google Sheets! I-refresh ang pahina.");
-                location.reload(); // I-reload para lumabas ang mga datos sa table
-            } else {
-                alert("Walang laman o invalid ang nakuha mula sa Backup_Logs.");
-            }
+        if (result.status === "success" && result.data && Object.keys(result.data).length > 0) {
+            // Isave pabalik sa local storage ng browser
+            localStorage.setItem("area105_daily_scores_v4", JSON.stringify(result.data));
+            
+            alert("Tagumpay na na-restore ang data mula sa Google Sheets!");
+            
+            // Kusa nitong ire-reload ang pahina para lumabas agad ang mga datos sa table
+            location.reload(); 
         } else {
-            alert("Hindi ma-restore ang data.");
+            alert("Walang makitang bagong backup sa Google Sheets.");
         }
     } catch (error) {
         console.error("Restore Error:", error);
